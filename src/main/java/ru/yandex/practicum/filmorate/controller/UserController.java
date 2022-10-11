@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -19,7 +20,7 @@ public class UserController {
 
     private final HashMap<Integer, User> users = new HashMap<>();
     @PostMapping("/users")
-    public User addToFilms(@RequestBody User user) {
+    public User addToFilms(@Valid @RequestBody User user) {
         userValidation(user);
         if(user.getName() == null) {
             user.setName(user.getLogin());
@@ -30,7 +31,7 @@ public class UserController {
     }
 
     @PutMapping("/users")
-    public User putToFilm(@RequestBody User user) {
+    public User putToFilm(@Valid @RequestBody User user) {
         userValidation(user);
         if(user.getName() == null) {
             user.setName(user.getLogin());

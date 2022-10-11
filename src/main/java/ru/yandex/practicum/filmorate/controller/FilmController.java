@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.exceptions.DoesntExistDataException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -17,7 +18,7 @@ public class FilmController {
     private final LocalDate filmsBirthDay = LocalDate.of(1895, 12, 28);
 
     @PostMapping("/films")
-    public Film addToFilms(@RequestBody Film film) {
+    public Film addToFilms(@Valid @RequestBody Film film) {
         filmValidation(film);
         films.put(film.getId(), film);
         log.debug("Фильм {} добавлен", film.getName());
@@ -25,7 +26,7 @@ public class FilmController {
     }
 
     @PutMapping("/films")
-    public Film putToFilm(@RequestBody Film film) {
+    public Film putToFilm(@Valid @RequestBody Film film) {
         filmValidation(film);
         if(films.containsKey(film.getId())) {
             films.put(film.getId(), film);

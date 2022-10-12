@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.LocalDate;
 
@@ -10,8 +11,11 @@ import java.time.LocalDate;
 public class Film {
     int id = 1;
     @NotBlank
-    String name;
-    String description;
-    LocalDate releaseDate;
-    int duration;
+    @NotNull
+    private String name;
+    @NotNull
+    private String description;
+    @NotNull
+    private LocalDate releaseDate;
+    private int duration;
 }

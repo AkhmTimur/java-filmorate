@@ -2,13 +2,14 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.DoesntExistDataException;
+import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -31,19 +32,16 @@ public class FilmController {
         if(films.containsKey(film.getId())) {
             films.put(film.getId(), film);
         } else {
-            throw new DoesntExistDataException("Данного фильма нет в записях");
+            throw new DataNotFoundException("Данного фильма нет в записях");
         }
         return film;
     }
 
     @GetMapping("/films")
     public List<Film> getFilms() {
-        ArrayList<Film> result = new ArrayList<>();
-        for (Integer filmId : films.keySet()) {
-            result.add(films.get(filmId));
-        }
-        result.sort(Comparator.comparingInt(Film::getId));
-        return result;
+        return films.keySet().stream()
+                .map(films::get)
+                .collect(Collectors.toList());
     }
 
     private void filmValidation(Film film) {

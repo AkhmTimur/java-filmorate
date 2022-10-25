@@ -3,10 +3,8 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @Component("inMemoryUserStorage")
@@ -53,17 +51,11 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<User> getFriends(Long id) {
-        List<User> result = new ArrayList<>();
-        for (Long friendId : users.get(id).getFriends()) {
-            result.add(users.get(friendId));
-        }
-        return result;
-    }
-
-    @Override
     public User deleteFriend(Long userId, Long friendId) {
-        users.get(userId).deleteFriend(friendId);
+        if(users.containsKey(friendId)) {
+            users.get(userId).deleteFriend(friendId);
+            users.get(friendId).deleteFriend(userId);
+        }
         return users.get(userId);
     }
 
@@ -91,16 +83,6 @@ public class InMemoryUserStorage implements UserStorage {
         } else {
             throw new DataNotFoundException("Пользователь не найден");
         }
-    }
-
-    public List<User> getCommonFriend(Long id, Long friendId) {
-        List<User> result = new ArrayList<>();
-        for (Long friend : users.get(id).getFriends()) {
-            if(users.get(friendId).getFriends().contains(friend)) {
-                result.add(users.get(friend));
-            }
-        }
-        return result;
     }
 
     public List<User> getAllFriends(Long id) {

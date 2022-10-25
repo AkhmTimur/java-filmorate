@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,10 +15,10 @@ import java.util.List;
 public class UserService {
 
     private static Long nextId = 0L;
-    private final InMemoryUserStorage inMemoryUserStorage;
+    private final UserStorage userStorage;
 
-    public UserService(InMemoryUserStorage inMemoryUserStorage) {
-        this.inMemoryUserStorage = inMemoryUserStorage;
+    public UserService(UserStorage userStorage) {
+        this.userStorage = userStorage;
     }
 
     public User addToUsers(User user) {
@@ -28,7 +29,8 @@ public class UserService {
         if(user.getId() == null) {
             user.setId(genId());
         }
-        return inMemoryUserStorage.addToUsers(user);
+        log.debug("Пользователь {} добавлен", user);
+        return userStorage.addToUsers(user);
     }
 
     public User putToUser(User user) {
@@ -36,31 +38,38 @@ public class UserService {
         if (user.getName() == null) {
             user.setName(user.getLogin());
         }
-        return inMemoryUserStorage.putToUser(user);
+        log.debug("Пользователь {} обновлен", user);
+        return userStorage.putToUser(user);
     }
 
     public List<User> getUsers() {
-        return inMemoryUserStorage.getUsers();
+        log.debug("Запрошены пользователи {}", userStorage.getUsers());
+        return userStorage.getUsers();
     }
 
     public User getUser(Long id) {
-        return inMemoryUserStorage.getUser(id);
+        log.debug("Запрошен пользователь {}", userStorage.getUser(id));
+        return userStorage.getUser(id);
     }
 
     public List<User> getAllFriends(Long id) {
-        return inMemoryUserStorage.getAllFriends(id);
+        log.debug("Запрошены друзья пользователя с id: {} : {}", id, userStorage.getAllFriends(id));
+        return userStorage.getAllFriends(id);
     }
 
     public void addFriend(Long id, Long friendId) {
-        inMemoryUserStorage.addFriend(id, friendId);
+        log.debug("К пользователю с id: {} в друзья добавлен пользователь с id: {}", id, friendId);
+        userStorage.addFriend(id, friendId);
     }
 
     public User deleteFriend(Long id, Long friendId) {
-        return inMemoryUserStorage.deleteFriend(id, friendId);
+        log.debug("У пользователя с id: {} из друзей удален пользователь с id: {}", id, friendId);
+        return userStorage.deleteFriend(id, friendId);
     }
 
     public List<User> getCommonFriends(Long id, Long otherId) {
-        return inMemoryUserStorage.getCommonFriends(id, otherId);
+        log.debug("Запрошены общие друзья пользователя с id: {} и пользователя с id: {}", id, otherId);
+        return userStorage.getCommonFriends(id, otherId);
     }
 
     private Long genId() {

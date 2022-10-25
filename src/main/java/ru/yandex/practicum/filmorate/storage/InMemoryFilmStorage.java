@@ -13,6 +13,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     private Long nextId = 0L;
     private final HashMap<Long, Film> films = new HashMap<>();
 
+    private UserStorage userStorage;
+
+    public InMemoryFilmStorage(UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
+
     @Override
     public Film addToFilms(Film film) {
         if(film.getId() == null) {
@@ -41,14 +47,16 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void likeToFilm(Long id, Long userId) {
-        if(films.containsKey(id)) {
+        if(films.containsKey(id) && userStorage.getUser(userId) != null) {
             films.get(id).getUsersLikes().add(userId);
+        } else {
+            throw new DataNotFoundException("Фильма с данным id " + id + " не найдено.");
         }
     }
 
     @Override
     public void deleteLike(Long id, Long userId) {
-        if(films.get(id).getUsersLikes().contains(userId)) {
+        if(films.get(id).getUsersLikes().contains(userId) && userStorage.getUser(userId) != null) {
             films.get(id).getUsersLikes().remove(userId);
         } else {
             throw new DataNotFoundException("Фильма с данным id " + id + " не найдено.");

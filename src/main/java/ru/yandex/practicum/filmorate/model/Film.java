@@ -11,7 +11,7 @@ import java.util.Set;
 
 @Data
 public class Film {
-    Long id;
+    private Long id;
     @NotBlank
     @NotNull
     private String name;
@@ -20,5 +20,13 @@ public class Film {
     @NotNull
     private LocalDate releaseDate;
     private int duration;
-    Set<Long> usersLikes = new HashSet<>();
+    private Set<Long> usersLikes = new HashSet<>();
+
+    public void addLikeToFilm(Long userId) {
+        usersLikes.add(userId);
+    }
+
+    public void deleteLike(Long userId) {
+        usersLikes.remove(userId);
+    }
 }

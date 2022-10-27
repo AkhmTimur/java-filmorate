@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -20,6 +21,7 @@ public class Film {
     @NotNull
     private LocalDate releaseDate;
     private int duration;
+
     private Set<Long> usersLikes = new HashSet<>();
 
     public void addLikeToFilm(Long userId) {

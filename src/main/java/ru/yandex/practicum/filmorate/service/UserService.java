@@ -34,7 +34,7 @@ public class UserService {
             user.setName(user.getLogin());
         }
 
-        if (userStorage.getUsers().contains(user)) {
+        if (userStorage.getUser(user.getId()) != null) {
             userStorage.putToUser(user);
             log.debug("Пользователь {} обновлен", user);
             return user;

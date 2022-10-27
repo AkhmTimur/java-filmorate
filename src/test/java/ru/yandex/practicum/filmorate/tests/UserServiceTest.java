@@ -115,7 +115,7 @@ public class UserServiceTest {
         try {
             userService.putToUser(user);
         } catch (DataNotFoundException e) {
-            assertEquals("Данного пользователя нет в записях", e.getMessage());
+            assertEquals("Пользователь не найден", e.getMessage());
         }
     }
 

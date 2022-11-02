@@ -1,11 +1,10 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.enums.FilmGenres;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +20,8 @@ public class Film {
     @NotNull
     private LocalDate releaseDate;
     private int duration;
+    @NotNull
+    private Set<FilmGenres> filmGenresList = new HashSet<>();
 
     private Set<Long> usersLikes = new HashSet<>();
 

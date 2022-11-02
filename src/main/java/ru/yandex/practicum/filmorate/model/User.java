@@ -22,6 +22,7 @@ public class User {
     @NotNull
     private LocalDate birthday;
     private Set<Long> friends = new HashSet<>();
+    private Set<Long> friendsRequest = new HashSet<>();
 
     public void addFriend(Long friendId) {
         friends.add(friendId);

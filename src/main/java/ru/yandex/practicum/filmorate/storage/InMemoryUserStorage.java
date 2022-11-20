@@ -25,7 +25,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User putToUser(User user) {
+    public User putToUsers(User user) {
         users.put(user.getId(), user);
         log.debug("Пользователь {} обновлен", user.getLogin());
         return user;
@@ -52,12 +52,12 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User deleteFriend(Long userId, Long friendId) {
+    public Optional<User> deleteFriend(Long userId, Long friendId) {
         if (users.containsKey(friendId)) {
             users.get(userId).deleteFriend(friendId);
             users.get(friendId).deleteFriend(userId);
         }
-        return users.get(userId);
+        return Optional.of(users.get(userId));
     }
 
     @Override
@@ -79,9 +79,9 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getUser(Long id) {
+    public Optional<User> getUser(Long id) {
         if (users.containsKey(id)) {
-            return users.get(id);
+            return Optional.of(users.get(id));
         } else {
             throw new DataNotFoundException("Пользователь не найден");
         }

@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
@@ -18,7 +20,6 @@ public class FilmController {
 
     private final FilmService filmService;
 
-    @Autowired
     public FilmController(FilmService filmService) {
         this.filmService = filmService;
     }
@@ -71,6 +72,29 @@ public class FilmController {
         filmService.deleteLFilm(id);
     }
 
+    @GetMapping("/mpa/{id}")
+    public Mpa getMpa(@PathVariable Integer id) {
+        log.debug("Запрошен рейтинг: " + id);
+        return filmService.getMpa(id);
+    }
+
+    @GetMapping("/mpa")
+    public List<Mpa> getAllMpa() {
+        log.debug("Запрошены все рейтинги");
+        return filmService.getAllMpa();
+    }
+
+    @GetMapping("/genres/{id}")
+    public Genre getGenre(@PathVariable Integer id) {
+        log.debug("Запрошен жанр: " + id);
+        return filmService.getGenre(id);
+    }
+
+    @GetMapping("/genres")
+    public List<Genre> getAllGenres() {
+        log.debug("Запрошены все жанры");
+        return filmService.getAllGenres();
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)

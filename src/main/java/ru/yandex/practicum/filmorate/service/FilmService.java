@@ -1,10 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.time.LocalDate;
@@ -18,9 +22,10 @@ public class FilmService {
 
     private final LocalDate filmsBirthday = LocalDate.of(1895, 12, 28);
 
+    @Qualifier("FilmDbStorage")
     private final FilmStorage filmStorage;
 
-    public FilmService(FilmStorage filmStorage) {
+    public FilmService(FilmDbStorage filmStorage) {
         this.filmStorage = filmStorage;
     }
 
@@ -33,13 +38,9 @@ public class FilmService {
 
     public Film putToFilm(Film film) {
         filmValidation(film);
-        if(filmStorage.getFilm(film.getId()) != null) {
-            filmStorage.putToFilm(film);
-            log.debug("Фильм {} обновлён", film.getName());
-            return film;
-        } else {
-            throw new DataNotFoundException("Данного фильма нет в записях");
-        }
+        filmStorage.putToFilm(film);
+        log.debug("Фильм {} обновлён", film.getName());
+        return film;
     }
 
     public List<Film> getAllFilms() {
@@ -59,23 +60,17 @@ public class FilmService {
     }
 
     public List<Film> getMostLikedFilms(int count) {
-        List<Film> result = new ArrayList<>();
-        filmStorage.getAllFilms()
-                .stream()
-                .sorted((f1, f2) ->  f2.getUsersLikes().size() - f1.getUsersLikes().size())
-                .limit(count)
-                .forEach(result::add);
-        return result;
+        return filmStorage.getMostPopularFilms(count);
     }
 
     public Film getFilm(Long id) {
-        Film film = filmStorage.getFilm(id);
+        Film film = filmStorage.getFilm(id).orElse(null);
         log.debug("Запрошен фильм с id: {}", id);
         return film;
     }
 
     public void deleteLFilm(Long id) {
-        if(filmStorage.getFilm(id) != null) {
+        if(filmStorage.getFilm(id).isPresent()) {
             filmStorage.deleteFilm(id);
         }
     }
@@ -88,4 +83,19 @@ public class FilmService {
         }
     }
 
+    public Mpa getMpa(Integer id) {
+        return filmStorage.getMpa(id);
+    }
+
+    public List<Mpa> getAllMpa() {
+        return filmStorage.getAllMpa();
+    }
+
+    public Genre getGenre(Integer id) {
+        return filmStorage.getGenre(id);
+    }
+
+    public List<Genre> getAllGenres() {
+        return filmStorage.getAllGenres();
+    }
 }

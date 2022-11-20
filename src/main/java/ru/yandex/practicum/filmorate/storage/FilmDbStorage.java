@@ -115,7 +115,7 @@ public class FilmDbStorage implements FilmStorage {
             );
         } catch (EmptyResultDataAccessException e) {
             System.out.println(e.getMessage());
-            throw new DataNotFoundException("Данного фильма нет в записях");
+            throw new DataNotFoundException("Данного фильма нет в записях " + id);
         }
     }
 

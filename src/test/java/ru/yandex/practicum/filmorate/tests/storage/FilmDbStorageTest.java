@@ -26,13 +26,6 @@ public class FilmDbStorageTest {
     private final Film film = new Film(1L, "film", "filmDescr",
             LocalDate.of(2022, 10, 10), 100, 4, Mpa.builder().id(2).build());
 
-    @BeforeEach
-    void beforeEach() {
-        for (Film film : filmDbStorage.getAllFilms()) {
-            filmDbStorage.deleteFilm(film.getId());
-        }
-    }
-
     @Test
     void addToFilmsAndGetFilmsTest() {
         filmDbStorage.addToFilms(film);
@@ -53,6 +46,9 @@ public class FilmDbStorageTest {
 
     @Test
     void getAllFilmsTest() {
+        for (Film film : filmDbStorage.getAllFilms()) {
+            filmDbStorage.deleteFilm(film.getId());
+        }
         filmDbStorage.addToFilms(film);
         Film film1 = film;
         film1.setReleaseDate(LocalDate.of(2011, 5, 5));
@@ -90,7 +86,6 @@ public class FilmDbStorageTest {
         Film film1 = film;
         film1.setReleaseDate(LocalDate.of(2011, 5, 5));
         filmDbStorage.addToFilms(film1);
-        assertEquals(2, filmDbStorage.getAllFilms().size());
 
         filmDbStorage.deleteFilm(film1.getId());
 

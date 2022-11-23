@@ -13,6 +13,8 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,7 +70,7 @@ public class FilmDbStorageTest {
         filmDbStorage.addToFilms(film);
         filmDbStorage.likeToFilm(film.getId(), user.getId());
 
-        assertNull(Objects.requireNonNull(filmDbStorage.getFilm(film.getId()).orElse(null))
+        assertEquals(Collections.emptySet(), Objects.requireNonNull(filmDbStorage.getFilm(film.getId()).orElse(null))
                 .getUsersLikes());
     }
 
@@ -81,7 +83,7 @@ public class FilmDbStorageTest {
 
         filmDbStorage.deleteLike(film.getId(), user.getId());
 
-        assertNull(Objects.requireNonNull(filmDbStorage.getFilm(film.getId()).orElse(null)).getUsersLikes());
+        assertEquals(Collections.emptySet(), Objects.requireNonNull(filmDbStorage.getFilm(film.getId()).orElse(null)).getUsersLikes());
     }
 
     @Test

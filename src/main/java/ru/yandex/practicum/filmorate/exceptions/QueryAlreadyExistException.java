@@ -5,8 +5,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class QueryAlreadyExistException extends RuntimeException  {
-    String message;
-
     public QueryAlreadyExistException(String message) {
         super(message);
     }

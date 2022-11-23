@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -21,18 +22,21 @@ import java.util.*;
 
 @Repository
 @Slf4j
-@Qualifier
+@Qualifier("FilmDbStorage")
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
-
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    private final MpaStorage mpaStorage;
+    private final GenreStorage genreStorage;
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, MpaStorage mpaStorage, GenreStorage genreStorage) {
         this.jdbcTemplate = jdbcTemplate;
+        this.mpaStorage = mpaStorage;
+        this.genreStorage = genreStorage;
     }
 
     @Override
     public Film addToFilms(Film film) {
-        String sql = "INSERT INTO films (film_name, release_date, description, duration, rate, mpa) VALUES (?,?,?,?,?,?);";
+        String sql = "INSERT INTO films (film_name, release_date, description, duration, mpa) VALUES (?,?,?,?,?);";
 
         KeyHolder kh = new GeneratedKeyHolder();
 
@@ -42,8 +46,7 @@ public class FilmDbStorage implements FilmStorage {
             stmt.setDate(2, Date.valueOf(film.getReleaseDate().toString()));
             stmt.setString(3, film.getDescription());
             stmt.setInt(4, film.getDuration());
-            stmt.setInt(5, film.getRate());
-            stmt.setInt(6, film.getMpa().getId());
+            stmt.setInt(5, film.getMpa().getId());
             return stmt;
         }, kh);
         film.setId(Objects.requireNonNull(kh.getKey()).longValue());
@@ -59,15 +62,13 @@ public class FilmDbStorage implements FilmStorage {
     public Film putToFilm(Film film) {
         if (getFilm(film.getId()).isPresent()) {
             String sql = "UPDATE films SET film_name = ?, description = ?, release_date = ?," +
-                    " duration = ?, rate = ?, mpa = ? WHERE film_id = ?";
+                    " duration = ?, mpa = ? WHERE film_id = ?";
             jdbcTemplate.update(sql, film.getName(), film.getDescription(),
-                    film.getReleaseDate(), film.getDuration(), film.getRate(), film.getMpa().getId(), film.getId());
+                    film.getReleaseDate(), film.getDuration(), film.getMpa().getId(), film.getId());
 
+            deleteGenres(film);
             if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-                deleteGenres(film);
-                film.setGenres(updateGenres(film));
-            } else {
-                deleteGenres(film);
+                addToFilmGenres(film);
             }
             log.debug("Данные пользователя name: {} id: {} обновлены", film.getName(), film.getId());
             return film;
@@ -92,6 +93,10 @@ public class FilmDbStorage implements FilmStorage {
         }
         String sql = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
         jdbcTemplate.update(sql, id, userId);
+        String countSql = "SELECT count(user_id) user_count  FROM film_likes WHERE film_id = ?";
+        int userCount = jdbcTemplate.query(countSql, (rs, rowNum) -> rs.getInt("user_count") ,id).get(0);
+        String updateFilm = "UPDATE films SET rate = ? WHERE film_id = ?";
+        jdbcTemplate.update(updateFilm, userCount, id);
     }
 
     @Override
@@ -131,71 +136,16 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    @Override
-    public Mpa getMpa(Integer id) {
-        try {
-            String sql = "SELECT * FROM mpa WHERE mpa_id = ?";
-            List<Mpa> mpa = jdbcTemplate.query(sql,
-                    (rs, rowNum) -> Mpa.builder().id(rs.getInt("mpa_id"))
-                            .name(rs.getString("mpa_name")).build(),
-                    id
-            );
-            if (mpa.size() > 0) {
-                return mpa.get(0);
-            } else {
-                throw new DataNotFoundException("Данного рейтинга нет в записях");
-            }
-        } catch (EmptyResultDataAccessException e) {
-            System.out.println(e.getMessage());
-            throw new DataNotFoundException("Данного рейтинга нет в записях");
-        }
-    }
-
-    @Override
-    public List<Mpa> getAllMpa() {
-        String sql = "SELECT * FROM mpa";
-        return jdbcTemplate.query(sql,
-                (rs, rowNum) -> Mpa.builder().id(rs.getInt("mpa_id")).name(rs.getString("mpa_name")).build());
-    }
-
-    @Override
-    public Genre getGenre(Integer id) {
-        try {
-            String sql = "SELECT * FROM genres WHERE genre_id = ?";
-            List<Genre> genres = jdbcTemplate.query(sql,
-                    (rs, rowNum) -> Genre.builder().id(rs.getInt("genre_id"))
-                            .name(rs.getString("genre_name")).build(),
-                    id);
-            if (genres.size() > 0) {
-                return genres.get(0);
-            } else {
-                throw new DataNotFoundException("Данного жанра нет в записях");
-            }
-        } catch (EmptyResultDataAccessException e) {
-            System.out.println(e.getMessage());
-            throw new DataNotFoundException("Данного жанра нет в записях");
-        }
-    }
-
-    @Override
-    public List<Genre> getAllGenres() {
-        String sql = "SELECT * FROM genres";
-        return jdbcTemplate.query(sql,
-                (rs, rowNum) -> Genre.builder().id(rs.getInt("genre_id"))
-                        .name(rs.getString("genre_name")).build());
-    }
 
     @Override
     public List<Film> getMostPopularFilms(int count) {
-        List<Long> mostPopularFilmIds = new ArrayList<>();
-        String sql = "SELECT  film_id, COUNT(*) users_likes FROM film_likes GROUP BY film_id ORDER BY users_likes DESC LIMIT ?";
-        jdbcTemplate.query(sql, (rs, rowNum) -> mostPopularFilmIds.add(rs.getLong("film_id")), count);
+        List<Film> mostPopularFilms = new ArrayList<>();
+        String sql = "SELECT * FROM films ORDER BY rate DESC LIMIT ?";
+        jdbcTemplate.query(sql, (rs, rowNum) -> mostPopularFilms.add(makeFilm(rs)), count);
 
         List<Film> result = new ArrayList<>();
-        if (mostPopularFilmIds.size() > 0) {
-            for (Long mostPopularFilmId : mostPopularFilmIds) {
-                result.add(getFilm(mostPopularFilmId).orElse(null));
-            }
+        if (mostPopularFilms.size() > 0) {
+            result.addAll(mostPopularFilms);
         } else {
             List<Film> films = new ArrayList<>();
             String filmSql = "SELECT * FROM films ORDER BY film_id LIMIT ?";
@@ -208,95 +158,48 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     public void addToFilmGenres(Film film) {
-        String sql = "INSERT INTO films_genres (film_id, genre_id) VALUES (?,?);";
-        if (film.getGenres() != null) {
-            for (int i = 0; i < film.getGenres().size(); i++) {
-                jdbcTemplate.update(sql, film.getId(), film.getGenres().get(i).getId());
-            }
-        }
+        SortedSet<Genre> genres = new TreeSet<>((g1, g2) -> g1.getId() - g2.getId());
+        genres.addAll(film.getGenres());
+        film.setGenres(new ArrayList<>(genres));
+        String sql = "INSERT INTO films_genres (film_id, genre_id) VALUES (?,?);";  
+        jdbcTemplate.batchUpdate(sql,
+                new BatchPreparedStatementSetter() {
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setLong(1, film.getId());
+                        ps.setLong(2, film.getGenres().get(i).getId());
+                    }
+                    public int getBatchSize() {
+                        return film.getGenres().size();
+                    }
+                }
+
+        );
     }
 
-    private List<Genre> getFilmGenres(Long filmId) {
-        String genreSql = "SELECT fg.genre_id, g.genre_name FROM films_genres fg" +
-                " JOIN genres g ON g.genre_id = fg.genre_id" +
-                " WHERE film_id = ?";
-        List<Genre> genres = new ArrayList<>();
-        jdbcTemplate.query(genreSql,
-                (rsa, rowNum) -> genres.add(Genre.builder().id(rsa.getInt("genre_id"))
-                        .name(rsa.getString("genre_name")).build()),
-                filmId);
-        if (genres.size() > 0) {
-            return genres;
-        }
-        return Collections.emptyList();
-    }
 
-    private List<Mpa> getFilmMpa(Integer mpaId) {
-        String sql = "SELECT * FROM mpa where mpa_id = ?";
-        List<Mpa> mpa = new ArrayList<>();
-        jdbcTemplate.query(sql,
-                (rsa, rowNum) -> mpa.add(Mpa.builder()
-                        .id(rsa.getInt("mpa_id")).name(rsa.getString("mpa_name")).build()),
-                mpaId);
-        if (mpa.size() > 0) {
-            return mpa;
-        }
-        return null;
-    }
+
 
     private void deleteGenres(Film film) {
         jdbcTemplate.update("DELETE FROM films_genres WHERE film_id = ?", film.getId());
     }
 
-    private List<Genre> updateGenres(Film film) {
-        List<Genre> sortedList = new ArrayList<>();
-        SortedSet<Genre> genreSet = new TreeSet<>((g1, g2) -> g1.getId() - g2.getId());
-        genreSet.addAll(film.getGenres());
-        for (Genre genre : genreSet) {
-            String preGenreSql = "SELECT COUNT(*) count FROM films_genres WHERE film_id = ? AND genre_id = ?";
-            List<Integer> count = jdbcTemplate.query(preGenreSql, (rs, rowNum) -> rs.getInt("count"), film.getId(), genre.getId());
-            if (count.get(0) == 0) {
-                jdbcTemplate.update("INSERT INTO films_genres (film_id, genre_id) VALUES (?, ?)",
-                        film.getId(), genre.getId()
-                );
-            }
-            sortedList.add(genre);
-        }
-        return sortedList;
-    }
-
-
     private Film makeFilm(ResultSet rs) throws SQLException {
         Long filmId = rs.getLong("film_id");
         Integer mpaId = rs.getInt("mpa");
 
-        List<Mpa> mpa = getFilmMpa(mpaId);
-        List<Genre> genres = getFilmGenres(filmId);
+        List<Mpa> mpa = mpaStorage.getFilmMpa(mpaId);
+        List<Genre> genres = genreStorage.getFilmGenres(filmId);
 
-        if (mpa != null) {
-            return new Film(
-                    filmId,
-                    rs.getString("film_name"),
-                    rs.getString("description"),
-                    rs.getDate("release_date").toLocalDate(),
-                    rs.getInt("duration"),
-                    rs.getInt("rate"),
-                    genres,
-                    mpa.get(0),
-                    null
-            );
-        } else {
-            return new Film(
-                    filmId,
-                    rs.getString("film_name"),
-                    rs.getString("description"),
-                    rs.getDate("release_date").toLocalDate(),
-                    rs.getInt("duration"),
-                    rs.getInt("rate"),
-                    null
-            );
-        }
-
+        return new Film(
+                filmId,
+                rs.getString("film_name"),
+                rs.getString("description"),
+                rs.getDate("release_date").toLocalDate(),
+                rs.getInt("duration"),
+                rs.getInt("rate"),
+                genres,
+                mpa.get(0),
+                Collections.emptySet());
     }
 
     private int checkRowsCount(Long id, Long userId) {

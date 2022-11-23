@@ -3,18 +3,17 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -22,11 +21,14 @@ public class FilmService {
 
     private final LocalDate filmsBirthday = LocalDate.of(1895, 12, 28);
 
-    @Qualifier("FilmDbStorage")
     private final FilmStorage filmStorage;
+    private final MpaStorage mpaStorage;
+    private final GenreStorage genreStorage;
 
-    public FilmService(FilmDbStorage filmStorage) {
+    public FilmService(@Qualifier("FilmDbStorage")FilmStorage filmStorage, MpaStorage mpaStorage, GenreStorage genreStorage) {
         this.filmStorage = filmStorage;
+        this.mpaStorage = mpaStorage;
+        this.genreStorage = genreStorage;
     }
 
     public Film addToFilms(Film film) {
@@ -84,18 +86,18 @@ public class FilmService {
     }
 
     public Mpa getMpa(Integer id) {
-        return filmStorage.getMpa(id);
+        return mpaStorage.getMpa(id);
     }
 
     public List<Mpa> getAllMpa() {
-        return filmStorage.getAllMpa();
+        return mpaStorage.getAllMpa();
     }
 
     public Genre getGenre(Integer id) {
-        return filmStorage.getGenre(id);
+        return genreStorage.getGenre(id);
     }
 
     public List<Genre> getAllGenres() {
-        return filmStorage.getAllGenres();
+        return genreStorage.getAllGenres();
     }
 }

@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.tests.storage;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -10,6 +9,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -22,9 +23,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FilmDbStorageTest {
 
     private final FilmDbStorage filmDbStorage;
+    private final GenreStorage genreStorage;
+    private final MpaStorage mpaStorage;
+
 
     private final Film film = new Film(1L, "film", "filmDescr",
-            LocalDate.of(2022, 10, 10), 100, 4, Mpa.builder().id(2).build());
+            LocalDate.of(2022, 10, 10), 100, 4, new Mpa(2, null));
 
     @Test
     void addToFilmsAndGetFilmsTest() {
@@ -94,22 +98,22 @@ public class FilmDbStorageTest {
 
     @Test
     void getMpaTest() {
-        assertEquals("PG", filmDbStorage.getMpa(film.getMpa().getId()).getName());
+        assertEquals("PG", mpaStorage.getMpa(film.getMpa().getId()).getName());
     }
 
     @Test
     void getAllMpaTest() {
-        assertEquals(5, filmDbStorage.getAllMpa().size());
+        assertEquals(5, mpaStorage.getAllMpa().size());
     }
 
     @Test
     void getGenreByIdTest() {
-        assertEquals("Комедия", filmDbStorage.getGenre(1).getName());
+        assertEquals("Комедия", genreStorage.getGenre(1).getName());
     }
 
     @Test
     void getAllGenresTest() {
-        assertEquals(6, filmDbStorage.getAllGenres().size());
+        assertEquals(6, genreStorage.getAllGenres().size());
     }
 
     @Test

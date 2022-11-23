@@ -23,13 +23,5 @@ public interface FilmStorage {
 
     void deleteFilm(Long id);
 
-    Mpa getMpa(Integer id);
-
-    List<Mpa> getAllMpa();
-
-    Genre getGenre(Integer id);
-
-    List<Genre> getAllGenres();
-
     List<Film> getMostPopularFilms(int count);
 }

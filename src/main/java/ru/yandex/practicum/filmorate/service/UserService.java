@@ -16,10 +16,9 @@ import java.util.Optional;
 @Slf4j
 public class UserService {
 
-    @Qualifier("UserDbStorage")
     private final UserStorage userStorage;
 
-    public UserService(UserDbStorage userStorage) {
+    public UserService(@Qualifier("UserDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -49,9 +48,9 @@ public class UserService {
         return userStorage.getUsers();
     }
 
-    public Optional<User> getUser(Long id) {
+    public User getUser(Long id) {
         log.debug("Запрошен пользователь {}", userStorage.getUser(id));
-        return userStorage.getUser(id);
+        return userStorage.getUser(id).orElse(null);
     }
 
     public List<User> getAllFriends(Long id) {

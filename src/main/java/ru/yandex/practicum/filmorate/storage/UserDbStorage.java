@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-@Qualifier
+@Qualifier("UserDbStorage")
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
@@ -81,11 +81,12 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> getCommonFriends(Long id, Long otherId) {
         List<Optional<User>> users = new ArrayList<>();
-        String sql = "select * from USERS as U\n" +
-                "inner join (select SECOND_USER_ID from FRIENDSHIPS where FIRST_USER_ID = ?) as F on U.USER_ID = F.SECOND_USER_ID\n" +
-                "inner join (select SECOND_USER_ID from FRIENDSHIPS where FIRST_USER_ID = ?) as O on U.USER_ID = O.SECOND_USER_ID;";
+        String sql = "select U.USER_ID user_id from USERS as U" +
+                " inner join FRIENDSHIPS as F on U.USER_ID = F.SECOND_USER_ID" +
+                " inner join FRIENDSHIPS as S on U.USER_ID = S.SECOND_USER_ID" +
+                " where F.FIRST_USER_ID = ? and S.FIRST_USER_ID = ?";
         jdbcTemplate.query(sql,
-                (rs, rowNum) -> users.add(getUser(rs.getLong("SECOND_USER_ID"))),
+                (rs, rowNum) -> users.add(getUser(rs.getLong("user_id"))),
                 id,
                 otherId
         );
@@ -111,10 +112,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getAllFriends(Long id) {
-        List<User> result = new ArrayList<>();
         String sql = "SELECT SECOND_USER_ID AS USER_ID FROM FRIENDSHIPS WHERE FIRST_USER_ID = ?";
-        jdbcTemplate.query(sql, (rs, rowNum) -> result.add(getUser(rs.getLong("USER_ID")).orElse(null)), id);
-        return result;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> getUser(rs.getLong("USER_ID")).orElse(null), id);
     }
 
     @Override

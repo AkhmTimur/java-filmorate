@@ -4,10 +4,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component("inMemoryFilmStorage")

@@ -1,3 +1,5 @@
+drop all OBJECTS;
+
 create table IF NOT EXISTS MPA
 (
     MPA_ID   INTEGER         not null

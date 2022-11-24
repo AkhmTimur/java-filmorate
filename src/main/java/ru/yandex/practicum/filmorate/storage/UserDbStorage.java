@@ -9,11 +9,13 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.*;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 @Qualifier("UserDbStorage")
@@ -80,19 +82,17 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getCommonFriends(Long id, Long otherId) {
-        List<Optional<User>> users = new ArrayList<>();
-        String sql = "select U.USER_ID user_id from USERS as U" +
-                " inner join FRIENDSHIPS as F on U.USER_ID = F.SECOND_USER_ID" +
-                " inner join FRIENDSHIPS as S on U.USER_ID = S.SECOND_USER_ID" +
-                " where F.FIRST_USER_ID = ? and S.FIRST_USER_ID = ?";
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT u.* FROM users AS u" +
+                " INNER JOIN friendships AS f ON u.user_id = f.second_user_id" +
+                " INNER JOIN friendships AS s ON u.user_id = s.second_user_id" +
+                " WHERE f.first_user_id = ? AND s.first_user_id = ?";
         jdbcTemplate.query(sql,
-                (rs, rowNum) -> users.add(getUser(rs.getLong("user_id"))),
+                (rs, rowNum) -> users.add(makeUser(rs)),
                 id,
                 otherId
         );
-        return users.stream()
-                .map(o -> o.orElse(null))
-                .collect(Collectors.toList());
+        return new ArrayList<>(users);
     }
 
     @Override
@@ -112,8 +112,11 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getAllFriends(Long id) {
-        String sql = "SELECT SECOND_USER_ID AS USER_ID FROM FRIENDSHIPS WHERE FIRST_USER_ID = ?";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> getUser(rs.getLong("USER_ID")).orElse(null), id);
+        String sql = "SELECT u.* " +
+                " FROM friendships f" +
+                " JOIN users u ON f.second_user_id = u.user_id" +
+                " WHERE first_user_id = ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id);
     }
 
     @Override

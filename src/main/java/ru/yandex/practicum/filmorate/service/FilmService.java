@@ -5,12 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,13 +17,9 @@ public class FilmService {
     private final LocalDate filmsBirthday = LocalDate.of(1895, 12, 28);
 
     private final FilmStorage filmStorage;
-    private final MpaStorage mpaStorage;
-    private final GenreStorage genreStorage;
 
-    public FilmService(@Qualifier("FilmDbStorage")FilmStorage filmStorage, MpaStorage mpaStorage, GenreStorage genreStorage) {
+    public FilmService(@Qualifier("FilmDbStorage")FilmStorage filmStorage) {
         this.filmStorage = filmStorage;
-        this.mpaStorage = mpaStorage;
-        this.genreStorage = genreStorage;
     }
 
     public Film addToFilms(Film film) {
@@ -83,21 +74,5 @@ public class FilmService {
             log.debug("Фильм {} не прошел валидацию. Полные данные: {}", film.getName(), film);
             throw new ValidationException("Данные не корректны");
         }
-    }
-
-    public Mpa getMpa(Integer id) {
-        return mpaStorage.getMpa(id);
-    }
-
-    public List<Mpa> getAllMpa() {
-        return mpaStorage.getAllMpa();
-    }
-
-    public Genre getGenre(Integer id) {
-        return genreStorage.getGenre(id);
-    }
-
-    public List<Genre> getAllGenres() {
-        return genreStorage.getAllGenres();
     }
 }

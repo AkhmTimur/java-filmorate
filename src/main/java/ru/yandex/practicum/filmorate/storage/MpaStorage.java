@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -41,7 +40,6 @@ public class MpaStorage {
         return jdbcTemplate.query(sql,
                 (rs, rowNum) -> new Mpa(rs.getInt("mpa_id"), rs.getString("mpa_name")));
     }
-
 
     List<Mpa> getFilmMpa(Integer mpaId) {
         String sql = "SELECT * FROM mpa where mpa_id = ?";

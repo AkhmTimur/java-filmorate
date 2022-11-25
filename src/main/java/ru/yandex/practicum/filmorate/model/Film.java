@@ -37,12 +37,4 @@ public class Film {
         this.rate = rate;
         this.mpa = mpa;
     }
-
-    public void addLikeToFilm(Long userId) {
-        usersLikes.add(userId);
-    }
-
-    public void deleteLike(Long userId) {
-        usersLikes.remove(userId);
-    }
 }

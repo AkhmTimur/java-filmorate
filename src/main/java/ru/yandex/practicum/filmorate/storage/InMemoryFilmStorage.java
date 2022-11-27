@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component("inMemoryFilmStorage")
@@ -15,7 +18,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     private final UserStorage userStorage;
 
-    public InMemoryFilmStorage(UserStorage userStorage) {
+    public InMemoryFilmStorage(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -43,7 +46,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void likeToFilm(Long id, Long userId) {
-        if (films.containsKey(id) && userStorage.getUser(userId) != null) {
+        if (films.containsKey(id) && userStorage.getUser(userId).isPresent()) {
             films.get(id).getUsersLikes().add(userId);
         } else {
             throw new DataNotFoundException("Фильма с данным id " + id + " не найдено.");
@@ -53,7 +56,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void deleteLike(Long id, Long userId) {
         if (films.get(id).getUsersLikes().contains(userId)) {
-            if (userStorage.getUser(userId) != null) {
+            if (userStorage.getUser(userId).isPresent()) {
                 films.get(id).getUsersLikes().remove(userId);
             } else {
                 throw new DataNotFoundException("Пользователя с данным id " + userId + " не найдено.");
@@ -64,9 +67,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilm(Long id) {
+    public Optional<Film> getFilm(Long id) {
         if (films.containsKey(id)) {
-            return films.get(id);
+            return Optional.of(films.get(id));
         } else {
             throw new DataNotFoundException("Фильм с id: " + id + " не найден");
         }
@@ -79,6 +82,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         } else {
             throw new DataNotFoundException("Данного фильма id: " + id + " нет в записях");
         }
+    }
+
+    @Override
+    public List<Film> getMostPopularFilms(int count) {
+        return null;
     }
 
     public Long genId() {

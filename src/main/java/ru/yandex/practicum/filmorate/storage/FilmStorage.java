@@ -1,8 +1,12 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import org.springframework.data.relational.core.sql.In;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FilmStorage {
     Film addToFilms(Film film);
@@ -15,7 +19,9 @@ public interface FilmStorage {
 
     void deleteLike(Long id, Long userId);
 
-    Film getFilm(Long id);
+    Optional<Film> getFilm(Long id);
 
     void deleteFilm(Long id);
+
+    List<Film> getMostPopularFilms(int count);
 }

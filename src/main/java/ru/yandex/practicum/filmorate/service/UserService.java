@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -13,9 +13,10 @@ import java.util.List;
 @Service
 @Slf4j
 public class UserService {
+
     private final UserStorage userStorage;
 
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("UserDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -34,13 +35,10 @@ public class UserService {
             user.setName(user.getLogin());
         }
 
-        if (userStorage.getUser(user.getId()) != null) {
-            userStorage.putToUser(user);
-            log.debug("Пользователь {} обновлен", user);
-            return user;
-        } else {
-            throw new DataNotFoundException("Данного пользователя нет в записях");
-        }
+        userStorage.putToUsers(user);
+        log.debug("Пользователь {} обновлен", user);
+        return user;
+
     }
 
     public List<User> getUsers() {
@@ -50,7 +48,7 @@ public class UserService {
 
     public User getUser(Long id) {
         log.debug("Запрошен пользователь {}", userStorage.getUser(id));
-        return userStorage.getUser(id);
+        return userStorage.getUser(id).orElse(null);
     }
 
     public List<User> getAllFriends(Long id) {
@@ -59,16 +57,16 @@ public class UserService {
     }
 
     public void addFriend(Long id, Long friendId) {
-        if (userStorage.getUser(id) != null && userStorage.getUser(friendId) != null) {
+        if (userStorage.getUser(id).isPresent() && userStorage.getUser(friendId).isPresent()) {
             log.debug("К пользователю с id: {} в друзья добавлен пользователь с id: {}", id, friendId);
             userStorage.addFriend(id, friendId);
         }
     }
 
     public void deleteFriend(Long id, Long friendId) {
-        if (userStorage.getUser(id) != null && userStorage.getUser(friendId) != null) {
-            log.debug("У пользователя с id: {} из друзей удален пользователь с id: {}", id, friendId);
+        if (userStorage.getUser(id).isPresent() && userStorage.getUser(friendId).isPresent()) {
             userStorage.deleteFriend(id, friendId);
+            log.debug("У пользователя с id: {} из друзей удален пользователь с id: {}", id, friendId);
         }
     }
 

@@ -1,16 +1,12 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.DataNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -18,7 +14,6 @@ public class FilmController {
 
     private final FilmService filmService;
 
-    @Autowired
     public FilmController(FilmService filmService) {
         this.filmService = filmService;
     }
@@ -69,20 +64,5 @@ public class FilmController {
     public void deleteFilm(@PathVariable Long id) {
         log.debug("Удален фильм. id: " + id);
         filmService.deleteLFilm(id);
-    }
-
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleDataNotFound(final DataNotFoundException e) {
-        log.debug("Данные не найдены" + e.getMessage());
-        return Map.of("Данные не найдены", e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleValidationException(final ValidationException e) {
-        log.debug("Запрос не поддерживается" + e.getMessage());
-        return Map.of("Запрос не поддерживается", e.getMessage());
     }
 }
